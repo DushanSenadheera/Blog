@@ -56,6 +56,8 @@ app.use(async(req, res, next) =>{
 app.get('/api/articles/:name', async (req, res)=>{
     const {name} = req.params;
 
+    const {uid} = req.user;
+
     // const client = new MongoClient('mongodb://127.0.0.1:27017')
     // await client.connect();
 
@@ -64,6 +66,8 @@ app.get('/api/articles/:name', async (req, res)=>{
     const article = await db.collection('articles').findOne({name});
 
     if(article){
+        const upvoteIds = article.upvoteIds || [];
+        article.canUpvote = uis && !upvoteIds.include(uid);
         res.json(article);
     }
     else{
@@ -72,14 +76,17 @@ app.get('/api/articles/:name', async (req, res)=>{
     
 });
 
+app.use((req,res,next)=>{
+    if(req.user){
+        next();
+    }else {
+        res.sendStatus(401);
+    }
+});
+
 app.put('/api/articles/:name/upvote', async (req, res)=>{
     const {name} = req.params;
-    // const article = articlesInfo.find(a=>a.name===name);
-
-    // const client = new MongoClient('mongodb://127.0.0.1:27017')
-    // await client.connect();
-
-    // const db = client.db('react-blog-db');
+    
 
     await db.collection('articles').updateOne({name}, {
         $inc: {upvotes: 1},
