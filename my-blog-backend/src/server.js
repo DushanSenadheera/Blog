@@ -30,6 +30,20 @@ admin.initializeApp({
 const app = express();
 app.use(express.json());
 
+app.use(async(req, res, next) =>{
+    const {authtoken} = req.headers;
+
+    if(authtoken){
+        try {
+            req.user = await admin.auth().verifyIdToken(authtoken);
+        } catch (e) {
+            res.sendStatus(400);
+        }
+    }
+
+    next();
+});
+
 // app.post('/hello', (req, res) => {
 //     res.send(`Hello ${req.body.name}!`);
 // });
